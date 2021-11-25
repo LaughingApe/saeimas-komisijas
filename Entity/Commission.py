@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import requests
 import datetime
 
+from Entity.Meeting import Meeting
+
 class Commission:
     COMMISSION_LIST_URL = 'https://titania.saeima.lv/livs/saeimasnotikumi.nsf/ComissionsList?readform'
     COMMISSION_URL_BASE = 'https://titania.saeima.lv/livs/saeimasnotikumi.nsf'
@@ -12,8 +14,9 @@ class Commission:
         self.display_name = display_name
         self.url = url
         self.meetingCount = 0
+        self.meetings = []
 
-    def scrapeMeetings(self):
+    def scrapeMeetingList(self):
         meetingResponse = requests.get(self.COMMISSION_URL_BASE + self.url[1:])
         meetingPageHTML = BeautifulSoup(meetingResponse.text, 'html.parser')
         meetingListHTML = meetingPageHTML.find(id='viewHolderText').text.strip()
@@ -42,3 +45,10 @@ class Commission:
 
             if meetingTime > lookupLimit:
                 self.meetingCount += 1
+                m = Meeting(content[i]['unid'], meetingTimeString, content[i]['title'], content[i]['place'])
+                self.meetings.append(m)
+                m.scrapeSelf()
+
+    def scrapeMeetings(self):
+        for m in self.meetings:
+            m.scrapeSelf()

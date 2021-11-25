@@ -23,5 +23,5 @@ class WebScraperController:
             print('...be polite, wait 3 seconds')
             time.sleep(3)
             print(commission.display_name)
-            commission.scrapeMeetings()
+            commission.scrapeMeetingList()
             print(str(commission.meetingCount) + " meetings found")
