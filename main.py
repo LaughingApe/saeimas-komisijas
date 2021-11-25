@@ -1,4 +1,5 @@
 from Controller.WebScraperController import WebScraperController
 
 webScraperController = WebScraperController()
-webScraperController.main()
+webScraperController.scrapeCommissions()
+webScraperController.scrapeAllMeetings()
