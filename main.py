@@ -1,5 +1,6 @@
-from Controller.WebScraperController import WebScraperController
+from Module.CommissionModule import CommissionModule
 
-webScraperController = WebScraperController()
-webScraperController.scrapeCommissions()
-webScraperController.scrapeAllMeetings()
+commissionModule = CommissionModule()
+commissionModule.scrapeCommissions()
+commissionModule.updateCommissions()
+commissionModule.scrapeAllMeetings()
