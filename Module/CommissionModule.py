@@ -15,6 +15,9 @@ class CommissionModule:
     COMMISSION_URL_BASE = 'https://titania.saeima.lv/livs/saeimasnotikumi.nsf'
     MEETING_URL_BASE = 'https://titania.saeima.lv/livs/saeimasnotikumi.nsf/0/<UNID>?OpenDocument&prevCat=13'
 
+    def __init__(self, config):
+        self.config = config
+
     def scrapeCommissions(self):
         self.commissions = []
 
@@ -26,10 +29,10 @@ class CommissionModule:
 
     def updateCommissions(self):
         db = mysql.connector.connect(
-            host="localhost",
-            user="phpmyadminuser",
-            passwd="password",
-            database="saeima"
+            host=self.config['DATABASE']['HOST'],
+            user=self.config['DATABASE']['USERNAME'],
+            passwd=self.config['DATABASE']['PASSWORD'],
+            database=self.config['DATABASE']['DATABASE']
         )
         dbCursor = db.cursor()
         dbCursor.execute("SELECT display_name FROM commission")

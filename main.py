@@ -1,6 +1,10 @@
 from Module.CommissionModule import CommissionModule
+import configparser
 
-commissionModule = CommissionModule()
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+commissionModule = CommissionModule(config)
 commissionModule.scrapeCommissions()
 commissionModule.updateCommissions()
 commissionModule.scrapeAllMeetings()
