@@ -11,4 +11,3 @@ class Meeting:
         self.meetingTime = datetime.datetime.strptime(meetingTime, '%d-%m-%Y %H:%M')
         self.title = title
         self.place = place
-        print(meetingTime + ' created')

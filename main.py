@@ -8,3 +8,5 @@ commissionModule = CommissionModule(config)
 commissionModule.scrapeCommissions()
 commissionModule.updateCommissions()
 commissionModule.scrapeAllMeetings()
+
+commissionModule.checkMeetingChanges()
