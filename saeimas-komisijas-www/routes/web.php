@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\SubscriptionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +25,7 @@ use App\Http\Controllers\UserController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('dashboard', [UserController::class, 'dashboard']); 
+Route::get('dashboard', [SubscriptionController::class, 'dashboard']); 
 
 Route::get('/', [UserController::class, 'index'])->name('login');
 Route::post('login', [UserController::class, 'login'])->name('login.post'); 

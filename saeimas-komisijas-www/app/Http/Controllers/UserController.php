@@ -79,20 +79,6 @@ class UserController extends Controller // Based on tutorial published here: htt
             return redirect("/")->withErrors('Notika kļūda. Šāds lietotājs neeksistē, šis lietotājs jau ir apstiprinājis savu e-pasta adresi vai arī e-pasta adreses apstiprināšanas saite nav pareiza.');
         }
     }
-
-    public function dashboard()
-    {
-        if(Auth::check()) {
-            
-            if (empty(Auth::user()->email_verified_at) || Auth::user()->email_verified_at->format('Y-m-d H:i:s') > date('Y-m-d H:i:s')) {
-                //return view('dashboard')->withError('Lūdzu, apstipriniet savu e-pasta adresi, pirms lietot "Seko Saeimai". Uz norādīto e-pasta adresi esam nosūtījuši apstiprinājuma saiti. Pārbaudi, vai tā nav iekritusi mēstuļu sadaļā!');
-                return view('dashboard')->withErrors(['error1' => 'Lūdzu, apstipriniet savu e-pasta adresi, pirms lietot "Seko Saeimai". Uz norādīto e-pasta adresi esam nosūtījuši apstiprinājuma saiti. Pārbaudi, vai tā nav iekritusi mēstuļu sadaļā!']);
-            }
-            return view('dashboard');
-        }
-  
-        return redirect("/")->withSuccess('Jums nav piekļuves.');
-    }
     
 
     public function signOut() {
