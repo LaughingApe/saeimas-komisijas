@@ -25,7 +25,7 @@ class UserController extends Controller // Based on tutorial published here: htt
    
         $credentials = $request->only('email', 'password');
         if (Auth::attempt($credentials)) {
-            return redirect()->intended('dashboard')
+            return redirect()->intended('subscriptions')
                         ->withSuccess('Jūs esat pieslēdzies sistēmai.');
         }
   
@@ -59,14 +59,14 @@ class UserController extends Controller // Based on tutorial published here: htt
         
         $to_name = $data['name'];
         $to_email = $data['email'];
-        $emailContent = array('name'=>$data['name'], 'body' => 'Jūs esat reģistrējies sistēmā "Seko Saeimai". Ja šo darbību tiktiešām veicāt jūs, lūdzu, apstipriniet to, atverot šo saiti: http://localhost:8000/confirm-email?address='.$data['email'].'&token='.$emailConfirmationToken);
+        $emailContent = array('name'=>$data['name'], 'body' => 'Jūs esat reģistrējies sistēmā "Seko Saeimai". Ja šo darbību tik tiešām veicāt jūs, lūdzu, apstipriniet to, atverot šo saiti: http://localhost:8000/confirm-email?address='.$data['email'].'&token='.$emailConfirmationToken);
 
         Mail::send("emails.mail", $emailContent, function($message) use ($to_name, $to_email) {
             $message->to($to_email, $to_name)->subject("You have signed in");
             $message->from("seko.saeimai@gmail.com","Seko Saeimai");
         });
         
-        return redirect("dashboard")->withSuccess('Jūs esat pieslēdzies sistēmai.');
+        return redirect("subscriptions")->withSuccess('Jūs esat pieslēdzies sistēmai.');
     }    
 
     public function confirmUserEmailAddress(Request $request) {

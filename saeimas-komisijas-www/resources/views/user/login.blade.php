@@ -1,4 +1,4 @@
-@extends('app')
+@extends('outter_website')
 
 @section('content')
 <main class="login-form">

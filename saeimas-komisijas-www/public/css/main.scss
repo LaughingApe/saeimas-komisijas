@@ -1,0 +1,11 @@
+.subscription-grid {
+    margin-top: 1rem;
+    grid-gap: 1rem;
+
+    display: grid;
+    grid-template-columns: 1fr;
+
+    @media only screen and (min-width: 768px) {
+        grid-template-columns: 1fr 1fr;
+    }
+}

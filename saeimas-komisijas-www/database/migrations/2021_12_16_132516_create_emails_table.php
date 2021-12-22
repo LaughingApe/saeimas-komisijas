@@ -16,7 +16,7 @@ class CreateEmailsTable extends Migration
         Schema::create('emails', function (Blueprint $table) {
             $table->id();
             $table->string('email_address', 255);
-            $table->date('email_verification_time');
+            $table->datetime('email_verification_time')->nullable();
             $table->string('email_verification_token', 15);
             $table->bigInteger('user_id')->unsigned();
             $table->foreign('user_id')->references('id')->on('users');

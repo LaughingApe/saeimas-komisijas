@@ -25,12 +25,16 @@ use App\Http\Controllers\SubscriptionController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('dashboard', [SubscriptionController::class, 'dashboard']); 
+Route::get('subscriptions', [SubscriptionController::class, 'subscriptions']);
+Route::get('add-email', [SubscriptionController::class, 'createEmailAddress'])->name('email.create');
+Route::post('add-email', [SubscriptionController::class, 'storeEmailAddress'])->name('email.store');
+Route::get('confirm-email-address', [SubscriptionController::class, 'confirmEmailAddress'])->name('confirm-email-address');
 
 Route::get('/', [UserController::class, 'index'])->name('login');
-Route::post('login', [UserController::class, 'login'])->name('login.post'); 
+Route::post('login', [UserController::class, 'login'])->name('login.post');
 Route::get('registration', [UserController::class, 'registration'])->name('register-user');
-Route::post('registration', [UserController::class, 'registerUser'])->name('register.post'); 
+Route::post('registration', [UserController::class, 'registerUser'])->name('register.post');
 Route::get('signout', [UserController::class, 'signOut'])->name('signout');
 Route::get('confirm-email', [UserController::class, 'confirmUserEmailAddress'])->name('confirm-user-email-address');
+
 
