@@ -6,5 +6,7 @@
   @media only screen and (min-width: 768px) {
     .subscription-grid {
       grid-template-columns: 1fr 1fr; } }
+  .subscription-grid button {
+    float: right; }
 
 /*# sourceMappingURL=main.css.map */

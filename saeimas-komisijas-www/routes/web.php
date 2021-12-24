@@ -26,6 +26,7 @@ use App\Http\Controllers\SubscriptionController;
 */
 
 Route::get('subscriptions', [SubscriptionController::class, 'subscriptions']);
+Route::post('subscriptions', [SubscriptionController::class, 'storeSubscriptions'])->name('subscriptions.store');
 Route::get('add-email', [SubscriptionController::class, 'createEmailAddress'])->name('email.create');
 Route::post('add-email', [SubscriptionController::class, 'storeEmailAddress'])->name('email.store');
 Route::get('confirm-email-address', [SubscriptionController::class, 'confirmEmailAddress'])->name('confirm-email-address');

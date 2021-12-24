@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Commission;
 use App\Models\Email;
+use App\Models\Subscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Mail;
 
 class SubscriptionController extends Controller
@@ -21,10 +23,25 @@ class SubscriptionController extends Controller
             $emails = Email::where('user_id', Auth::user()->id)->get();
             $commissions = Commission::all();
 
+            $subscriptionMatrix = [];
+
+            foreach ($commissions as $c) {
+                $subscriptionMatrix[$c->id] = [];
+                foreach ($emails as $e) {
+                    $subscriptionMatrix[$c->id][$e->id] = false;
+                }
+            }
+
+            $subscriptions = DB::table('subscriptions')->join('emails', 'subscriptions.email_id', '=', 'emails.id')->where('emails.user_id', Auth::user()->id)->get();
+            
+            foreach ($subscriptions as $s) {
+                $subscriptionMatrix[$s->commission_id][$s->email_id] = true;
+            }
 
             return view('subscriptions', [
                 'commissions' => $commissions,
-                'emails' => $emails
+                'emails' => $emails,
+                'subscriptions' => $subscriptionMatrix
             ]);
         }
         return redirect("/")->withErrors(['error1' => 'Jums nav piekļuves.']);
@@ -71,7 +88,7 @@ class SubscriptionController extends Controller
                 $message->from("seko.saeimai@gmail.com","Seko Saeimai");
             });
             
-            return redirect("subscriptions");
+            return redirect("subscriptions")->withSuccess('Izmaiņas saglabātas.');
         }
         return redirect("/")->withErrors(['error1' => 'Jums nav piekļuves.']);
     }
@@ -84,6 +101,48 @@ class SubscriptionController extends Controller
             return redirect("/")->withSuccess('E-pasta adrese '.$email->email_address.' veiksmīgi apstiprināta.');
         } else {
             return redirect("/")->withErrors('Notika kļūda. Apstiprināmā e-pasta adrese jau ir apstiprināta, neeksistē vai saite ir nepareiza.');
+        }
+    }
+
+    public function storeSubscriptions(Request $request)
+    {
+        if(Auth::check()) {
+            if (empty(Auth::user()->email_verified_at) || Auth::user()->email_verified_at->format('Y-m-d H:i:s') > date('Y-m-d H:i:s'))
+                return view('subscriptions')->withErrors(['error1' => 'Lūdzu, apstipriniet savu e-pasta adresi, pirms lietot "Seko Saeimai". Uz norādīto e-pasta adresi esam nosūtījuši apstiprinājuma saiti. Pārbaudi, vai tā nav iekritusi mēstuļu sadaļā!']);
+
+                $commissions = Commission::all();
+
+                foreach ($commissions as $c) {
+                    if ($request->has('submit-'.$c->id)) {
+                        
+                        $emails = Email::where('user_id', Auth::user()->id)->get();
+
+                        foreach ($emails as $e) {
+                            $this->setSubscriptionStatus($e->id, $c->id, $request->has($c->id.':'.$e->id));
+                        }
+                        break;
+                    }
+                }
+
+
+            return redirect("subscriptions");
+        }
+        return redirect("/")->withErrors(['error1' => 'Jums nav piekļuves.']);
+    }
+
+    private function setSubscriptionStatus($emailId, $commissionId, $status) {
+        $subscription = Subscription::where('email_id', $emailId)->where('commission_id', $commissionId)->first();
+        
+        if ($status) { // Subscription must be on
+            if (empty($subscription)) {
+                $newSubscription = new Subscription();
+                $newSubscription->email_id = $emailId;
+                $newSubscription->commission_id = $commissionId;
+                $newSubscription->save();
+            }
+        } else { // Subscription must be off
+            if (!empty($subscription))
+                $subscription->delete();
         }
     }
 }
