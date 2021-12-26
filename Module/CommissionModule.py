@@ -9,19 +9,18 @@ import copy
 
 from Entity.Commission import Commission
 from Entity.Meeting import Meeting
+from Module.EmailDispatchingModule import EmailDispatchingModule
 
 class CommissionModule:
-    COMMISSION_LIST_URL = 'https://titania.saeima.lv/livs/saeimasnotikumi.nsf/ComissionsList?readform'
-    COMMISSION_URL_BASE = 'https://titania.saeima.lv/livs/saeimasnotikumi.nsf'
-    MEETING_URL_BASE = 'https://titania.saeima.lv/livs/saeimasnotikumi.nsf/0/<UNID>?OpenDocument&prevCat=13'
 
-    def __init__(self, config):
+    def __init__(self, config, emailDispatchingModule):
         self.config = config
+        self.emailDispatchingModule = emailDispatchingModule
 
     def scrapeCommissions(self):
         self.commissions = []
 
-        commissionResponse = requests.get(self.COMMISSION_LIST_URL)
+        commissionResponse = requests.get(self.config['SCRAPER']['COMMISSION_LIST_URL'])
         commissionPageHTML = BeautifulSoup(commissionResponse.text, 'html.parser')
         commissionListHTML = commissionPageHTML.find(id='categoryBody_parl13')
 
@@ -39,7 +38,7 @@ class CommissionModule:
             database=self.config['DATABASE']['DATABASE']
         )
         dbCursor = db.cursor()
-        dbCursor.execute("SELECT display_name FROM commission")
+        dbCursor.execute("SELECT display_name FROM commissions")
         commissionsInDB = dbCursor.fetchall()
         commissionDisplayNamesInDB = []
         for commission in commissionsInDB:
@@ -49,7 +48,7 @@ class CommissionModule:
         for commission in self.commissions:
             if commission.displayName not in commissionDisplayNamesInDB:
                 nameTranslation = commission.displayName.lower().maketrans('āčēģīķļņšūž ', 'acegiklnsuz-', ',./\\')
-                dbCursor.execute("INSERT INTO commission (name, display_name, url) VALUES ('" + commission.displayName.lower().translate(nameTranslation) + "','" + commission.displayName + "', '" + commission.url + "')")
+                dbCursor.execute("INSERT INTO commissions (name, display_name, url) VALUES ('" + commission.displayName.lower().translate(nameTranslation) + "','" + commission.displayName + "', '" + commission.url + "')")
                 print("Add new commission '" + commission.displayName + "' to the database")
 
         db.commit()
@@ -63,7 +62,7 @@ class CommissionModule:
             print(commission.displayName + ": " + str(commission.meetingCount) + " meetings found")
 
     def scrapeMeetingsByCommission(self, commission):
-        meetingResponse = requests.get(self.COMMISSION_URL_BASE + commission.url[1:])
+        meetingResponse = requests.get(self.config['SCRAPER']['COMMISSION_URL_BASE'] + commission.url[1:])
         meetingPageHTML = BeautifulSoup(meetingResponse.text, 'html.parser')
         meetingListHTML = meetingPageHTML.find(id='viewHolderText').text.strip()
         content = meetingListHTML.splitlines()
@@ -98,7 +97,7 @@ class CommissionModule:
 
 
     def scrapeMeetingDescription(self, meeting):
-        meetingResponse = requests.get(self.MEETING_URL_BASE.replace('<UNID>', meeting.unid))
+        meetingResponse = requests.get(self.config['SCRAPER']['MEETING_URL_BASE'].replace('<UNID>', meeting.unid))
         meetingPageHTML = BeautifulSoup(meetingResponse.text, 'html.parser')
         meeting.description = str(meetingPageHTML.find(id='textBody'))
         
@@ -118,14 +117,15 @@ class CommissionModule:
         for commission in self.commissions:
             for meeting in commission.meetings:
                 
-                print("SELECT * FROM meeting WHERE unid = '" + meeting.unid + "'")
-                dbCursor.execute("SELECT * FROM meeting WHERE unid = '" + meeting.unid + "'")
+                dbCursor.execute("SELECT * FROM meetings WHERE unid = '" + meeting.unid + "'")
                 res = dbCursor.fetchall()
 
                 if not res:
                     self.uploadMeetingToDatabase(meeting)
+                    self.emailDispatchingModule.notifyMeetingAdded(meeting, commission.displayName)
                 else:
                     updateObject = copy.deepcopy(meeting)
+                    oldMeeting = Meeting(res[0][1], res[0][3], res[0][2], res[0][4], res[0][5])
                     
                     if updateObject.title == res[0][2]:
                         updateObject.title = None
@@ -134,10 +134,11 @@ class CommissionModule:
                     if updateObject.place == res[0][4]:
                         updateObject.place = None
                     if updateObject.description == res[0][5].decode("utf-8"):
-                        updateObject.description = None                        
+                        updateObject.description = None
 
                     if updateObject.title != None or updateObject.meetingTime != None or updateObject.place != None or updateObject.description != None:
                         self.updateMeetingInDatabase(updateObject)
+                        self.emailDispatchingModule.notifyMeetingChanged(oldMeeting, meeting, commission.displayName)
                     
 
     
@@ -150,7 +151,7 @@ class CommissionModule:
         )
         dbCursor = db.cursor()
 
-        dbCursor.execute("INSERT INTO meeting (unid, title, meeting_time, place, description) VALUES ('" + meeting.unid +  "','" + meeting.title + "', '" + meeting.meetingTime.strftime('%Y-%m-%d %H:%M:%S') + "', '" + meeting.place + "', '" + meeting.description + "')")
+        dbCursor.execute("INSERT INTO meetings (unid, title, meeting_time, place, description) VALUES ('" + meeting.unid +  "','" + meeting.title + "', '" + meeting.meetingTime.strftime('%Y-%m-%d %H:%M:%S') + "', '" + meeting.place + "', '" + meeting.description + "')")
         db.commit()
 
         print("Database: add meeting '" + meeting.title +  "' at " + meeting.meetingTime.strftime('%Y-%m-%d %H:%M:%S'))
@@ -175,7 +176,7 @@ class CommissionModule:
         if updateObject.description != None:
             setlist.append("description = '" + updateObject.description  + "'")
 
-        dbCursor.execute("UPDATE meeting SET " + ', '.join(setlist) + " WHERE unid = '" + updateObject.unid + "'")
+        dbCursor.execute("UPDATE meetings SET " + ', '.join(setlist) + " WHERE unid = '" + updateObject.unid + "'")
         db.commit()
 
         print("Database: updated meeting '" + updateObject.unid +  "' as " + ', '.join(setlist))
