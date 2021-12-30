@@ -30,7 +30,7 @@ class EmailDispatchingModule:
         emails = dbCursor.fetchall()
         emailAddresses = []
         for e in emails:
-            emailAddresses.append(e[1])
+            emailAddresses.append({'id': e[0], 'email_address': e[1], 'token': e[3]})
         
         try:
             server = smtplib.SMTP_SSL(self.config['MAIL']['MAIL_HOST'], self.config['MAIL']['MAIL_PORT'])
@@ -44,20 +44,23 @@ class EmailDispatchingModule:
         msg['Subject'] = 'Jauna sēde: ' + commissionDisplayName
         msg['From'] = self.config['MAIL']['MAIL_FROM_ADDRESS']
 
-        body = '''
+        for e in emailAddresses:
+
+            body = '''
 Sistēmā <i>Titania</i> pievienota jauna komisijas sēde. Lai skatītu sistēmā <i>Titania</i>, spied <a href="''' + self.config['SCRAPER']['MEETING_URL_BASE'].replace('<UNID>', meeting.unid) + '''" target="_blank">šeit</a>!<br/><br/>
 
 <b>Nosaukums</b>: ''' + meeting.title + '''<br/>
 <b>Vieta</b>: ''' + meeting.place + '''<br/>
 <b>Laiks</b>: ''' + meeting.meetingTime.strftime('%d.%m.%Y %H:%M') + '''<br/><br/>
-<b>Darba kārtība</b>:<br/>''' + meeting.description
+<b>Darba kārtība</b>:<br/>''' + meeting.description + '''<br/></br>
 
-        for e in emailAddresses:
+<div>Ja vairs nevēlaties saņemt jaunumus, varat noņemt šo e-pasta adresi no "Seko Saeimai" sistēmas, spiežot <a href="''' +  self.config['APP']['HOST'] + '''/remove-email/''' + str(e['id']) + '''?email-address=''' + e['email_address'] + '''&token=''' + e['token'] + '''">šeit</a>!</div>
+'''
 
-            msg['To'] = e
+            msg['To'] = e['email_address']
             msg.attach(MIMEText(body, 'html'))
 
-            server.sendmail(msg['From'], e, msg.as_string())
+            server.sendmail(msg['From'], e['email_address'], msg.as_string())
         
         server.close()
 
@@ -76,7 +79,7 @@ Sistēmā <i>Titania</i> pievienota jauna komisijas sēde. Lai skatītu sistēm�
         emails = dbCursor.fetchall()
         emailAddresses = []
         for e in emails:
-            emailAddresses.append(e[1])
+            emailAddresses.append({'id': e[0], 'email_address': e[1], 'token': e[3]})
         
         try:
             server = smtplib.SMTP_SSL(self.config['MAIL']['MAIL_HOST'], self.config['MAIL']['MAIL_PORT'])
@@ -90,38 +93,42 @@ Sistēmā <i>Titania</i> pievienota jauna komisijas sēde. Lai skatītu sistēm�
         msg['Subject'] = 'Izmaiņas komisijas sēdē: ' + commissionDisplayName
         msg['From'] = self.config['MAIL']['MAIL_FROM_ADDRESS']
 
-        body = '''
-        Sistēmā <i>Titania</i> labota komsiijas sēde. Lai skatītu sistēmā <i>Titania</i>, spied <a href="''' + self.config['SCRAPER']['MEETING_URL_BASE'].replace('<UNID>',newMeeting.unid) + '''" target="_blank">šeit</a>!<br/><br/>
-
-        Notikušās izmaiņas:<br/><br/>'''
-
-        if oldMeeting.title != newMeeting.title:
-            body = body + '''
-            <b>Vecais nosaukums</b>: ''' + oldMeeting.title + '''<br/>
-            <b>Jaunais nosaukums</b>: ''' + newMeeting.title + '''<br/><br/>
-            '''
-        
-        if oldMeeting.place != newMeeting.place:
-            body = body + '''
-            <b>Vecā sēdes norises vieta</b>: ''' + oldMeeting.place + '''<br/>
-            <b>Jaunā sēdes norises vieta</b>: ''' + newMeeting.place + '''<br/><br/>
-            '''
-        
-        if oldMeeting.meetingTime != newMeeting.meetingTime:
-            body = body + '''
-            <b>Vecais sēdes laiks</b>: ''' + oldMeeting.meetingTime.strftime('%d.%m.%Y %H:%M') + '''<br/>
-            <b>Jaunais sēdes laiks</b>: ''' + newMeeting.meetingTime.strftime('%d.%m.%Y %H:%M') + '''<br/><br/>
-            '''
-        if oldMeeting.description.decode('utf-8') != newMeeting.description:
-            body = body + '''
-            <b>Vecā sēdes darba kartība</b>: ''' + oldMeeting.description.decode('utf-8')  + '''<br/>
-            <b>Jaunā sēdes darba kārtība</b>: ''' + newMeeting.description  + '''<br/><br/>
-            '''
         for e in emailAddresses:
+            body = '''
+            Sistēmā <i>Titania</i> labota komsiijas sēde. Lai skatītu sistēmā <i>Titania</i>, spied <a href="''' + self.config['SCRAPER']['MEETING_URL_BASE'].replace('<UNID>',newMeeting.unid) + '''" target="_blank">šeit</a>!<br/><br/>
 
-            msg['To'] = e
+            Notikušās izmaiņas:<br/><br/>'''
+
+            if oldMeeting.title != newMeeting.title:
+                body = body + '''
+                <b>Vecais nosaukums</b>: ''' + oldMeeting.title + '''<br/>
+                <b>Jaunais nosaukums</b>: ''' + newMeeting.title + '''<br/><br/>
+                '''
+            
+            if oldMeeting.place != newMeeting.place:
+                body = body + '''
+                <b>Vecā sēdes norises vieta</b>: ''' + oldMeeting.place + '''<br/>
+                <b>Jaunā sēdes norises vieta</b>: ''' + newMeeting.place + '''<br/><br/>
+                '''
+            
+            if oldMeeting.meetingTime != newMeeting.meetingTime:
+                body = body + '''
+                <b>Vecais sēdes laiks</b>: ''' + oldMeeting.meetingTime.strftime('%d.%m.%Y %H:%M') + '''<br/>
+                <b>Jaunais sēdes laiks</b>: ''' + newMeeting.meetingTime.strftime('%d.%m.%Y %H:%M') + '''<br/><br/>
+                '''
+            if oldMeeting.description.decode('utf-8') != newMeeting.description:
+                body = body + '''
+                <b>Vecā sēdes darba kartība</b>: ''' + oldMeeting.description.decode('utf-8')  + '''<br/>
+                <b>Jaunā sēdes darba kārtība</b>: ''' + newMeeting.description  + '''<br/><br/>
+                '''
+
+            body = body + '''<br/></br>
+
+<div>Ja vairs nevēlaties saņemt jaunumus, varat noņemt šo e-pasta adresi no "Seko Saeimai" sistēmas, spiežot <a href="''' +  self.config['APP']['HOST'] + '''/remove-email/''' + str(e['id']) + '''?email-address=''' + e['email_address'] + '''&token=''' + e['token'] + '''">šeit</a>!</div>'''
+
+            msg['To'] = e['email_address']
             msg.attach(MIMEText(body, 'html'))
 
-            server.sendmail(msg['From'], e, msg.as_string())
+            server.sendmail(msg['From'], e['email_address'], msg.as_string())
         
         server.close()
