@@ -104,6 +104,41 @@ class SubscriptionController extends Controller
         }
     }
 
+    
+    public function deleteEmailAddress(Request $request, $email_id) {
+        if(Auth::check()) {
+            if (empty(Auth::user()->email_verified_at) || Auth::user()->email_verified_at->format('Y-m-d H:i:s') > date('Y-m-d H:i:s'))
+                return view('subscriptions')->withErrors(['error1' => 'Lūdzu, apstipriniet savu e-pasta adresi, pirms lietot "Seko Saeimai". Uz norādīto e-pasta adresi esam nosūtījuši apstiprinājuma saiti. Pārbaudi, vai tā nav iekritusi mēstuļu sadaļā!']);
+        
+            $email = Email::find($email_id);
+
+            if ($email == null) {
+                return view('remove_email_address')->withErrors(['error1' => 'Kļūda. E-pasta adrese netika atrasta.']);
+            }
+
+            Subscription::where('email_id', $email_id)->delete();
+            $email->delete();
+        } else {
+            $emailAddress = $request->get('email-address');
+            $emailToken = $request->get('token');
+            
+            if (empty($emailAddress) || empty($emailToken)) {
+                return view('remove_email_address')->withErrors(['error1' => 'Kļūda. E-pasta adresi neizdevās dzēst.']);
+            }
+
+            $email = Email::where('id', $email_id)->where('email_address', $emailAddress)->where('email_verification_token', $emailToken)->first();
+
+            if ($email == null) {
+                return view('remove_email_address')->withErrors(['error1' => 'Kļūda. E-pasta adresi neizdevās dzēst.']);
+            }
+
+
+            Subscription::where('email_id', $email_id)->delete();
+            $email->delete();
+        }
+        return redirect("/subscriptions")->withSuccess('E-pasta adrese '.$email->email_address.' noņemta.');
+    }
+
     public function storeSubscriptions(Request $request)
     {
         if(Auth::check()) {

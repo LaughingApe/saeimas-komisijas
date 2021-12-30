@@ -9,4 +9,11 @@
   .subscription-grid button {
     float: right; }
 
+.email-list > div {
+  margin-bottom: 0.4em; }
+  .email-list > div .remove-email-link {
+    margin-right: 0.4em; }
+    .email-list > div .remove-email-link img {
+      width: 0.9em; }
+
 /*# sourceMappingURL=main.css.map */
