@@ -88,7 +88,7 @@ class SubscriptionController extends Controller
                 $message->from("seko.saeimai@gmail.com","Seko Saeimai");
             });
             
-            return redirect("subscriptions")->withSuccess('Izmaiņas saglabātas.');
+            return redirect("subscriptions")->withSuccess('E-pasta adrese pievienota. Uz šo e-pastu ir nosūtīta saite, uz kuras nospiežot, varat apstiprināt, ka esat šī e-pasta īpašnieks.');
         }
         return redirect("/")->withErrors(['error1' => 'Jums nav piekļuves.']);
     }

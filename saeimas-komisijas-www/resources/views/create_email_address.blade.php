@@ -8,10 +8,11 @@ Pievienot e-pasta adresi
 <main class="container">
     <div class="row justify-content-center">
         <div class="col-md-4">
+            @foreach ($errors->all() as $error)
+            <div class="alert alert-warning">{{ $error }}</div>
+            @endforeach
             <div class="card">
-                @foreach ($errors->all() as $error)
-                <div class="alert alert-warning">{{ $error }}</div>
-                @endforeach
+
                 <div class="card-body">
                     <h3>Pievienot e-pasta adresi</h3>
                     <form method="POST" action="{{ route('email.store') }}">

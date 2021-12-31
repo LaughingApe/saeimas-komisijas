@@ -25,8 +25,7 @@ class UserController extends Controller // Based on tutorial published here: htt
    
         $credentials = $request->only('email', 'password');
         if (Auth::attempt($credentials)) {
-            return redirect()->intended('subscriptions')
-                        ->withSuccess('Jūs esat pieslēdzies sistēmai.');
+            return redirect()->intended('subscriptions');
         }
   
         return redirect("/")->withSuccess('E-pasta adrese un/vai parole ir nepareiza.');
@@ -66,7 +65,7 @@ class UserController extends Controller // Based on tutorial published here: htt
             $message->from("seko.saeimai@gmail.com","Seko Saeimai");
         });
         
-        return redirect("subscriptions")->withSuccess('Jūs esat pieslēdzies sistēmai.');
+        return redirect("subscriptions");
     }    
 
     public function confirmUserEmailAddress(Request $request) {

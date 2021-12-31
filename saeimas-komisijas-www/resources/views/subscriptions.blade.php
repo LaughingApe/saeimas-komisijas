@@ -7,6 +7,18 @@ Abonementi
 @section('content')
 <main class="container">
 
+    @if (Session::has('success'))
+      <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i> {{ Session::get('success') }}
+      </div>
+    @endif
+
+    @foreach ($errors->all() as $error)
+      <div class="alert alert-warning">{{ $error }}</div>
+    @endforeach
+
+    @if (empty($errors->all()))
+
     <div class="card">
         <div class="card-body">
             <h2>Manas e-pasta adreses</h2>
@@ -39,36 +51,33 @@ Abonementi
         </div>
         @endforeach
     </div>
+
+    @endif
 </main>
 
-@foreach ($emails as $email)
-<div class="modal fade" id="approveDelete-{{ $email->id }}" tabindex="-1" role="dialog" aria-labelledby="approveDelete-{{ $email->id }}" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="approveDelete-{{ $email->id }}">Dzēst e-pasta adresi?</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          Vai tiešām vēlaties dzēst e-pasta adresi <b>{{ $email->email_address}}</b>? Līdz ar tās dzēšanu tiks dzēsti arī visi tai piesaistītie abonementi.
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Aizvērt</button>
-          <a href="{{ url('/remove-email/'.$email->id) }}" type="button" class="btn btn-danger">Dzēst</a>
+
+@if (empty($errors->all()))
+  @foreach ($emails as $email)
+  <div class="modal fade" id="approveDelete-{{ $email->id }}" tabindex="-1" role="dialog" aria-labelledby="approveDelete-{{ $email->id }}" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="approveDelete-{{ $email->id }}">Dzēst e-pasta adresi?</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            Vai tiešām vēlaties dzēst e-pasta adresi <b>{{ $email->email_address}}</b>? Līdz ar tās dzēšanu tiks dzēsti arī visi tai piesaistītie abonementi.
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Aizvērt</button>
+            <a href="{{ url('/remove-email/'.$email->id) }}" type="button" class="btn btn-danger">Dzēst</a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-@endforeach
+  @endforeach
+@endif
 
-@endsection
-
-
-
-@section('javascript')
-<script>
-
-</script>
 @endsection
