@@ -25,7 +25,9 @@ Abonementi
             <div class="email-list">
                 @foreach ($emails as $email)
                 <div>
-                    <a role="button" data-toggle="modal" data-target="#approveDelete-{{ $email->id }}" class="remove-email-link"><img src="/assets/X.png" alt="Delete"/></a><span>{{ $email->email_address }}</span><br/>
+                    <a role="button" data-toggle="modal" data-target="#approveDelete-{{ $email->id }}" class="remove-email-link">
+                      <img src="/assets/X.png" alt="Delete"/></a>
+                      <span class="{{ empty($email->email_verification_time) ? 'unverified' : '' }}">{{ $email->email_address }} @if (empty($email->email_verification_time)) <img class="lock-icon" src="/assets/lock.png" alt="Slēdzene" data-toggle="tooltip" data-placement="right" title="E-pasta adrese nav apstiprināta. Apstiprināšanas saite tika jums nosūtīta uz e-pastu, kad to piereģistrējāt."/> @endif</span>
                 </div>
                 @endforeach
             </div>
@@ -42,8 +44,8 @@ Abonementi
                 <form method="POST" action="{{ route('subscriptions.store') }}">
                     @csrf
                     @foreach ($emails as $email)
-                    <input type="checkbox" id="{{ $commission->id.':'.$email->id }}" name="{{ $commission->id.':'.$email->id }}" value="{{ $email->email_address }}" {{ $subscriptions[$commission->id][$email->id] ? 'checked' : '' }}>
-                    <label for="{{ $commission->id.':'.$email->id }}">{{ $email->email_address }}</label><br>
+                    <input type="checkbox" id="{{ $commission->id.':'.$email->id }}" name="{{ $commission->id.':'.$email->id }}" value="{{ $email->email_address }}" {{ $subscriptions[$commission->id][$email->id] ? 'checked' : '' }} {{ empty($email->email_verification_time) ? 'disabled' : '' }}>
+                    <label for="{{ $commission->id.':'.$email->id }}" class="{{ empty($email->email_verification_time) ? 'unverified' : '' }}">{{ $email->email_address }}@if (empty($email->email_verification_time)) <img class="lock-icon" src="/assets/lock.png" alt="Slēdzene" data-toggle="tooltip" data-placement="right" title="E-pasta adrese nav apstiprināta. Apstiprināšanas saite tika jums nosūtīta uz e-pastu, kad to piereģistrējāt."/> @endif</label><br>
                     @endforeach
                     <button type="submit" name="submit-{{ $commission->id }}" class="btn btn-primary">Saglabāt</button>
                 </form>
@@ -80,4 +82,12 @@ Abonementi
   @endforeach
 @endif
 
+@endsection
+
+@section('javascript')
+<script>
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
 @endsection

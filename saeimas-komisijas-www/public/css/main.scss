@@ -21,8 +21,18 @@
         .remove-email-link{
             margin-right: 0.4em;
             img {
+                vertical-align: baseline;
                 width: 0.9em;
             }
         }
     }
+}
+
+.unverified {
+    color: #BBB;
+}
+.lock-icon {
+    display: inline-block;
+    vertical-align: baseline;
+    height: 0.9em;
 }
