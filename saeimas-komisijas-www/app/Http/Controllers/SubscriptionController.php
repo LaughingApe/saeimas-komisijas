@@ -113,7 +113,7 @@ class SubscriptionController extends Controller
             $email = Email::find($email_id);
 
             if ($email == null) {
-                return view('remove_email_address')->withErrors(['error1' => 'Kļūda. E-pasta adrese netika atrasta.']);
+                return redirect('subsciptions')->withErrors(['error1' => 'Kļūda. E-pasta adrese netika atrasta.']);
             }
 
             Subscription::where('email_id', $email_id)->delete();
@@ -123,13 +123,13 @@ class SubscriptionController extends Controller
             $emailToken = $request->get('token');
             
             if (empty($emailAddress) || empty($emailToken)) {
-                return view('remove_email_address')->withErrors(['error1' => 'Kļūda. E-pasta adresi neizdevās dzēst.']);
+                return redirect('/')->withErrors(['error1' => 'Kļūda. E-pasta adresi neizdevās dzēst.']);
             }
 
             $email = Email::where('id', $email_id)->where('email_address', $emailAddress)->where('email_verification_token', $emailToken)->first();
 
             if ($email == null) {
-                return view('remove_email_address')->withErrors(['error1' => 'Kļūda. E-pasta adresi neizdevās dzēst.']);
+                return redirect('/')->withErrors(['error1' => 'Kļūda. E-pasta adresi neizdevās dzēst.']);
             }
 
 
