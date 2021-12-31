@@ -5,6 +5,12 @@
     <div class="cotainer">
         <div class="row justify-content-center">
             <div class="col-md-4">
+                @if (Session::has('success'))
+                <div class="alert alert-success">
+                  <i class="fas fa-check-circle"></i> {{ Session::get('success') }}
+                </div>
+                @endif
+
                 @foreach ($errors->all() as $error)
                 <div class="alert alert-warning">{{ $error }}</div>
                 @endforeach
