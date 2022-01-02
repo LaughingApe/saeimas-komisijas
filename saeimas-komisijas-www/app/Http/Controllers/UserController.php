@@ -17,6 +17,7 @@ class UserController extends Controller // Based on tutorial published here: htt
         return view('user.login');
     }
 
+    // Authenticate user
     public function login(Request $request)
     {
         $request->validate([
@@ -37,7 +38,7 @@ class UserController extends Controller // Based on tutorial published here: htt
         return view('user.registration');
     }
       
-
+    // Register a new user
     public function registerUser(Request $request)
     {  
         $request->validate([
@@ -49,7 +50,7 @@ class UserController extends Controller // Based on tutorial published here: htt
            
         $data = $request->all();
 
-        $emailConfirmationToken = uniqid();
+        $emailConfirmationToken = uniqid(); // The token is randomly generated
         $newUser = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -57,12 +58,14 @@ class UserController extends Controller // Based on tutorial published here: htt
             'email_verification_token' => $emailConfirmationToken
         ]);
 
+        // Immediately create user email address also as their list of email addresses that they can subscribe from
         $email = new Email();
         $email->email_address = $data['email'];
         $email->email_verification_token = $emailConfirmationToken;
         $email->user_id = $newUser->id;
         $email->save();
         
+        // Send email so that they can confirm they are the owner of this email address
         $to_name = $data['name'];
         $to_email = $data['email'];
         $emailContent = array('name'=>$data['name'], 'body' => 'Jūs esat reģistrējies sistēmā "Seko Saeimai". Ja šo darbību tik tiešām veicāt jūs, lūdzu, apstipriniet to, atverot šo saiti: http://localhost:8000/confirm-email?address='.$data['email'].'&token='.$emailConfirmationToken);
@@ -75,12 +78,14 @@ class UserController extends Controller // Based on tutorial published here: htt
         return redirect("/");
     }    
 
+    // Confirm user email address (using link sent to email)
     public function confirmUserEmailAddress(Request $request) {
-        $user = User::where('email', $request->get('address'))->where('email_verification_token', $request->get('token'))->whereNull('email_verified_at')->first();
+        $user = User::where('email', $request->get('address'))->where('email_verification_token', $request->get('token'))->whereNull('email_verified_at')->first(); // Find the user by email address and token
         if (!empty($user)) {
-            $user->email_verified_at = date('Y-m-d H:i:s');
+            $user->email_verified_at = date('Y-m-d H:i:s'); // Save verification time
             $user->save();
 
+            // Also confirm the same email address in the subscription email list
             $email = Email::where('email_address', $user->email)->where('user_id', $user->id)->where('email_verification_token', $request->get('token'))->first();
             if (!empty($email)) {
                 $email->email_verification_time = date('Y-m-d H:i:s');
@@ -103,6 +108,7 @@ class UserController extends Controller // Based on tutorial published here: htt
 
     }
 
+    // Change user password
     public function updatePassword(Request $request) {
         if(Auth::check()) {
             if (empty(Auth::user()->email_verified_at) || Auth::user()->email_verified_at->format('Y-m-d H:i:s') > date('Y-m-d H:i:s'))
@@ -116,10 +122,12 @@ class UserController extends Controller // Based on tutorial published here: htt
     
             $user = Auth::user();
     
+            // Check if current passwords match
             if (!Hash::check($request->oldPassword, $user->password)) {
                 return redirect("change-password")->withErrors(['error1' => 'Līdzšinējā parole nav pareiza.']);
             }
     
+            // Save new password
             $user->password = Hash::make($request->newPassword);
             $user->save();
     

@@ -15,9 +15,11 @@ from Entity.Meeting import Meeting
 
 class EmailDispatchingModule:
 
+    # Initializer takes app config
     def __init__(self, config):
         self.config = config
 
+    # Notify subscribers about a new meeting that has been added
     def notifyMeetingAdded(self, meeting, commissionDisplayName): 
         db = mysql.connector.connect(
             host=self.config['DATABASE']['HOST'],
@@ -26,10 +28,12 @@ class EmailDispatchingModule:
             database=self.config['DATABASE']['DATABASE']
         )
         dbCursor = db.cursor()
+        
+        # Retrieve a list of subscribing emails for this commission
         dbCursor.execute('SELECT * FROM emails JOIN subscriptions ON emails.id=subscriptions.email_id JOIN commissions ON subscriptions.commission_id=commissions.id WHERE commissions.display_name="' + commissionDisplayName + '" AND emails.email_verification_time IS NOT NULL')
         emails = dbCursor.fetchall()
         emailAddresses = []
-        for e in emails:
+        for e in emails: # Extract the relevant info
             emailAddresses.append({'id': e[0], 'email_address': e[1], 'token': e[3]})
         
         try:
@@ -40,10 +44,12 @@ class EmailDispatchingModule:
         except:
             print('Neizdevās savienoties ar e-pasta lietotni.')
 
+        # Set the common part for all emails
         msg = MIMEMultipart('alternative')
         msg['Subject'] = 'Jauna sēde: ' + commissionDisplayName
         msg['From'] = self.config['MAIL']['MAIL_FROM_ADDRESS']
 
+        # Send an email to every subscribing email address
         for e in emailAddresses:
 
             body = '''
@@ -66,7 +72,7 @@ Sistēmā <i>Titania</i> pievienota jauna komisijas sēde. Lai skatītu sistēm�
 
 
         
-
+    # Notify subscribers about changes in an existing meeting
     def notifyMeetingChanged(self, oldMeeting, newMeeting, commissionDisplayName): 
         db = mysql.connector.connect(
             host=self.config['DATABASE']['HOST'],
@@ -75,10 +81,12 @@ Sistēmā <i>Titania</i> pievienota jauna komisijas sēde. Lai skatītu sistēm�
             database=self.config['DATABASE']['DATABASE']
         )
         dbCursor = db.cursor()
+
+        # Retrieve a list of subscribing emails for this commission
         dbCursor.execute('SELECT * FROM emails JOIN subscriptions ON emails.id=subscriptions.email_id JOIN commissions ON subscriptions.commission_id=commissions.id WHERE commissions.display_name="' + commissionDisplayName + '" AND emails.email_verification_time IS NOT NULL')
         emails = dbCursor.fetchall()
         emailAddresses = []
-        for e in emails:
+        for e in emails: # Extract the relevant info
             emailAddresses.append({'id': e[0], 'email_address': e[1], 'token': e[3]})
         
         try:
@@ -88,16 +96,20 @@ Sistēmā <i>Titania</i> pievienota jauna komisijas sēde. Lai skatītu sistēm�
 
         except:
             print('Neizdevās savienoties ar e-pasta lietotni.')
-
+        
+        # Set the common part for all emails
         msg = MIMEMultipart('alternative')
         msg['Subject'] = 'Izmaiņas komisijas sēdē: ' + commissionDisplayName
         msg['From'] = self.config['MAIL']['MAIL_FROM_ADDRESS']
-
+        
+        # Send an email to every subscribing email address
         for e in emailAddresses:
             body = '''
             Sistēmā <i>Titania</i> labota komsiijas sēde. Lai skatītu sistēmā <i>Titania</i>, spied <a href="''' + self.config['SCRAPER']['MEETING_URL_BASE'].replace('<UNID>',newMeeting.unid) + '''" target="_blank">šeit</a>!<br/><br/>
 
             Notikušās izmaiņas:<br/><br/>'''
+
+            # Add info about changes for every attribute that has changed, displaying both the old and new value
 
             if oldMeeting.title != newMeeting.title:
                 body = body + '''

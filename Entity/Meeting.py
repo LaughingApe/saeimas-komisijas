@@ -8,10 +8,13 @@ class Meeting:
 
     def __init__(self, unid, meetingTime, title, place, description = None):
         self.unid = unid
+        
+        # meetingTime is datetime; if string given - convert it
         if isinstance(meetingTime, str):
             self.meetingTime = datetime.datetime.strptime(meetingTime, '%d-%m-%Y %H:%M')
         else:
             self.meetingTime = meetingTime
+        
         self.title = title
         self.place = place
         self.description = description

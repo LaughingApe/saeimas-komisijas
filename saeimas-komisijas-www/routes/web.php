@@ -25,13 +25,8 @@ use App\Http\Controllers\SubscriptionController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('subscriptions', [SubscriptionController::class, 'subscriptions']);
-Route::post('subscriptions', [SubscriptionController::class, 'storeSubscriptions'])->name('subscriptions.store');
-Route::get('add-email', [SubscriptionController::class, 'createEmailAddress'])->name('email.create');
-Route::post('add-email', [SubscriptionController::class, 'storeEmailAddress'])->name('email.store');
-Route::get('remove-email/{email_id}', [SubscriptionController::class, 'deleteEmailAddress'])->name('email.delete');
-Route::get('confirm-email-address', [SubscriptionController::class, 'confirmEmailAddress'])->name('confirm-email-address');
 
+// User routes
 Route::get('/', [UserController::class, 'index'])->name('login');
 Route::post('login', [UserController::class, 'login'])->name('login.post');
 Route::get('registration', [UserController::class, 'registration'])->name('register-user');
@@ -42,3 +37,10 @@ Route::get('signout', [UserController::class, 'signOut'])->name('signout');
 Route::get('confirm-email', [UserController::class, 'confirmUserEmailAddress'])->name('confirm-user-email-address');
 
 
+// Subscription routes
+Route::get('subscriptions', [SubscriptionController::class, 'subscriptions']);
+Route::post('subscriptions', [SubscriptionController::class, 'storeSubscriptions'])->name('subscriptions.store');
+Route::get('add-email', [SubscriptionController::class, 'createEmailAddress'])->name('email.create');
+Route::post('add-email', [SubscriptionController::class, 'storeEmailAddress'])->name('email.store');
+Route::get('remove-email/{email_id}', [SubscriptionController::class, 'deleteEmailAddress'])->name('email.delete');
+Route::get('confirm-email-address', [SubscriptionController::class, 'confirmEmailAddress'])->name('confirm-email-address');
