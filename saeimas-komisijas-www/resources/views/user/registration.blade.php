@@ -1,5 +1,9 @@
 @extends('outter_website')
 
+@section('title')
+Reģistrēties
+@endsection
+
 @section('content')
 <main class="signup-form">
     <div class="cotainer">

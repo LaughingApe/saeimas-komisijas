@@ -1,5 +1,9 @@
 @extends('outter_website')
 
+@section('title')
+Sākums
+@endsection
+
 @section('content')
 <main class="login-form">
     <div class="cotainer">
