@@ -5,6 +5,9 @@
     <div class="cotainer">
         <div class="row justify-content-center">
             <div class="col-md-4">
+                <div class="registration-back">
+                    <a href="{{ url('/') }}">Atpakaļ</a>
+                </div>
                 <div class="card">
                     <h3 class="card-header text-center">Reģistrēt jaunu lietotāju</h3>
                     <div class="card-body">
@@ -44,7 +47,7 @@
                             </div>
 
                             <div class="d-grid mx-auto">
-                                <button type="submit" class="btn btn-dark btn-block">Reģistrēties</button>
+                                <button type="submit" class="btn btn-primary btn-block">Reģistrēties</button>
                             </div>
                         </form>
 

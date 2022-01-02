@@ -36,3 +36,19 @@
     vertical-align: baseline;
     height: 0.9em;
 }
+
+.registration-link-container {
+    text-align: right;
+    padding: 0.6rem;
+    a {
+        text-decoration: none;
+    }
+}
+.registration-back {
+    margin-top: 6rem;
+    padding: 0.6rem;
+    padding-bottom: 0.2rem;
+    a {
+        text-decoration: none;
+    }
+}
