@@ -78,6 +78,42 @@ class UserController extends Controller // Based on tutorial published here: htt
             return redirect("/")->withErrors('Notika kļūda. Šāds lietotājs neeksistē, šis lietotājs jau ir apstiprinājis savu e-pasta adresi vai arī e-pasta adreses apstiprināšanas saite nav pareiza.');
         }
     }
+
+    public function changePassword() {
+        if(Auth::check()) {
+            if (empty(Auth::user()->email_verified_at) || Auth::user()->email_verified_at->format('Y-m-d H:i:s') > date('Y-m-d H:i:s'))
+                return view('subscriptions')->withErrors(['error1' => 'Lūdzu, apstipriniet savu e-pasta adresi, pirms lietot "Seko Saeimai". Uz norādīto e-pasta adresi esam nosūtījuši apstiprinājuma saiti. Pārbaudi, vai tā nav iekritusi mēstuļu sadaļā!']);
+        
+            return view('user.change_password');
+        }
+        return redirect("/")->withErrors(['error1' => 'Jums nav piekļuves.']);
+
+    }
+
+    public function updatePassword(Request $request) {
+        if(Auth::check()) {
+            if (empty(Auth::user()->email_verified_at) || Auth::user()->email_verified_at->format('Y-m-d H:i:s') > date('Y-m-d H:i:s'))
+                return view('subscriptions')->withErrors(['error1' => 'Lūdzu, apstipriniet savu e-pasta adresi, pirms lietot "Seko Saeimai". Uz norādīto e-pasta adresi esam nosūtījuši apstiprinājuma saiti. Pārbaudi, vai tā nav iekritusi mēstuļu sadaļā!']);
+            
+            $request->validate([
+                'oldPassword' => 'required',
+                'newPassword' => 'required|string|min:8',
+                'newPasswordRepeat' => 'required|same:newPassword',
+            ]);
+    
+            $user = Auth::user();
+    
+            if (!Hash::check($request->oldPassword, $user->password)) {
+                return redirect("change-password")->withErrors(['error1' => 'Līdzšinējā parole nav pareiza.']);
+            }
+    
+            $user->password = Hash::make($request->newPassword);
+            $user->save();
+    
+            return redirect("change-password")->withSuccess('Parole nomainīta.');
+        }
+        return redirect("/")->withErrors(['error1' => 'Jums nav piekļuves.']);
+    }
     
 
     public function signOut() {

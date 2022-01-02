@@ -36,6 +36,8 @@ Route::get('/', [UserController::class, 'index'])->name('login');
 Route::post('login', [UserController::class, 'login'])->name('login.post');
 Route::get('registration', [UserController::class, 'registration'])->name('register-user');
 Route::post('registration', [UserController::class, 'registerUser'])->name('register.post');
+Route::get('change-password', [UserController::class, 'changePassword'])->name('change-password');
+Route::post('change-password', [UserController::class, 'updatePassword'])->name('change-password.store');
 Route::get('signout', [UserController::class, 'signOut'])->name('signout');
 Route::get('confirm-email', [UserController::class, 'confirmUserEmailAddress'])->name('confirm-user-email-address');
 

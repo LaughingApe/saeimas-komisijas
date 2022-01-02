@@ -24,6 +24,9 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav">
                         <li class="nav-item">
+                            <a class="nav-link" href="{{ route('change-password') }}">Mainīt paroli</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{{ route('signout') }}">Atteikties</a>
                         </li>
                     </ul>
