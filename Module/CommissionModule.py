@@ -7,6 +7,8 @@ import datetime
 import mysql.connector
 import copy
 
+from requests.api import request
+
 from Entity.Commission import Commission
 from Entity.Meeting import Meeting
 from Module.EmailDispatchingModule import EmailDispatchingModule
@@ -22,16 +24,26 @@ class CommissionModule:
     def scrapeCommissions(self):
         self.commissions = []
 
-        commissionResponse = requests.get(self.config['SCRAPER']['COMMISSION_LIST_URL'])
+        requestSuccessful = False
+        for i in range(3):
+            try:
+                commissionResponse = requests.get(self.config['SCRAPER']['COMMISSION_LIST_URL'])
+                requestSuccessful = True
+            except requests.exceptions as errh:
+                print ("Request error: ",errh, " (attempt " + str(i+1) + "/3)")
+                time.sleep(3*(i+2))
+
+        if requestSuccessful == False:
+            return False
+
         commissionPageHTML = BeautifulSoup(commissionResponse.text, 'html.parser')
         commissionListHTML = commissionPageHTML.find(id='categoryBody_parl13')
 
-        limit = 3
         for commissionHTML in commissionListHTML.find_all('div', 'categoryListEntry'):
             self.commissions.append(Commission(commissionHTML.text, commissionHTML.b.a['href'])) # Put all commissions in a list
-            limit -= 1
-            if limit == 0: break
 
+        return True
+        
     # Update the commission list in the database
     def updateCommissions(self):
         db = mysql.connector.connect(
@@ -66,7 +78,18 @@ class CommissionModule:
 
     # Scrape all meetings of one commission
     def scrapeMeetingsByCommission(self, commission):
-        meetingResponse = requests.get(self.config['SCRAPER']['COMMISSION_URL_BASE'] + commission.url[1:])
+        requestSuccessful = False
+        for i in range(3):
+            try:
+                meetingResponse = requests.get(self.config['SCRAPER']['COMMISSION_URL_BASE'] + commission.url[1:])
+                requestSuccessful = True
+            except requests.exceptions as errh:
+                print ("Request error: ",errh, " (attempt " + str(i+1) + "/3)")
+                time.sleep(3*(i+2))
+            
+        if requestSuccessful == False:
+            return False
+
         meetingPageHTML = BeautifulSoup(meetingResponse.text, 'html.parser')
         meetingListHTML = meetingPageHTML.find(id='viewHolderText').text.strip() # Get data of all meetings
         content = meetingListHTML.splitlines()
@@ -99,10 +122,23 @@ class CommissionModule:
                 commission.meetings.append(m)
                 time.sleep(3)
                 self.scrapeMeetingDescription(m)
+        
+        return False
                 
     # Scrape meeting description (agenda) of one meeting
     def scrapeMeetingDescription(self, meeting):
-        meetingResponse = requests.get(self.config['SCRAPER']['MEETING_URL_BASE'].replace('<UNID>', meeting.unid))
+        requestSuccessful = False
+        for i in range(3):
+            try:
+                meetingResponse = requests.get(self.config['SCRAPER']['MEETING_URL_BASE'].replace('<UNID>', meeting.unid))
+                requestSuccessful = True
+            except requests.exceptions as errh:
+                print ("Request error: ",errh, " (attempt " + str(i+1) + "/3)")
+                time.sleep(3*(i+2))
+            
+        if requestSuccessful == False:
+            return False
+
         meetingPageHTML = BeautifulSoup(meetingResponse.text, 'html.parser')
         meeting.description = str(meetingPageHTML.find(id='textBody'))
         
@@ -189,4 +225,4 @@ class CommissionModule:
         dbCursor.execute("UPDATE meetings SET " + ', '.join(setlist) + " WHERE unid = '" + updateObject.unid + "'")
         db.commit()
 
-        print("Database: updated meeting '" + updateObject.unid +  "' as " + ', '.join(setlist))
+        print("Database: updated meeting '" + updateObject.unid)
