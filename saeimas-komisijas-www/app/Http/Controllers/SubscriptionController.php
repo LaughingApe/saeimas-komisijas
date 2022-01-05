@@ -10,6 +10,7 @@ use App\Models\Subscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Mail;
 
 class SubscriptionController extends Controller
@@ -73,6 +74,17 @@ class SubscriptionController extends Controller
             if (!empty($existingEmail)) {
                 return view('create_email_address')->withErrors(['error1' => 'Jūs jau esat reģistrējis šādu e-pasta adresi.']);
             }
+
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+            ], [
+                'required' => 'E-pasta adrese ir obligāta.',
+                'email' => 'Ievadiet derīgu e-pasta adresi!',
+            ]);
+    
+            if ($validator->fails()) {
+                return redirect('add-email')->withErrors($validator->errors());
+            };
 
             // Create and save the email address
             $email = new Email();
