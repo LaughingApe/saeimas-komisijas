@@ -30,7 +30,7 @@ class UserController extends Controller // Based on tutorial published here: htt
             return redirect()->intended('subscriptions');
         }
   
-        return redirect("/")->withSuccess('E-pasta adrese un/vai parole ir nepareiza.');
+        return redirect("/")->withErrors(['error1' => 'E-pasta adrese un/vai parole ir nepareiza.']);
     }
 
     public function registration()
