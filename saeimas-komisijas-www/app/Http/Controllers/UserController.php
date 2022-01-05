@@ -51,10 +51,10 @@ class UserController extends Controller // Based on tutorial published here: htt
             'name.required' => 'Vārds ir obligāts.',
             'email.required' => 'E-pasta adrese ir obligāta.',
             'email.unique' => 'E-pasta adrese jau ir aizņemta.',
-            'email.email' => 'Ievadiet derīgu e-pasta adresi.',
+            'email.email' => 'Ievadiet derīgu e-pasta adresi!',
             'password.required' => 'Parole ir obligāta.',
             'password.min' => 'Parolei jābūt vismaz :min simbolus garai.',
-            'password-repeat.required' => 'Ievadiet paroli vēlreiz.',
+            'password-repeat.required' => 'Ievadiet paroli vēlreiz!',
             'password-repeat.same' => 'Parolei un atkārtotas paroles laukam jābūt vienādiem.',
         ]);
 
@@ -142,7 +142,7 @@ class UserController extends Controller // Based on tutorial published here: htt
             ], [
                 'oldPassword.required' => 'Līdzšinējā parole ir obligāta.',
                 'newPassword.required' => 'Jaunā parole ir obligāta.',
-                'newPassword.min' => 'Parolei jābūt vismaz :min simbolus garai..',
+                'newPassword.min' => 'Parolei jābūt vismaz :min simbolus garai.',
                 'newPasswordRepeat.required' => 'Parole ir obligāta.',
                 'newPasswordRepeat.same' => 'Parolei un atkārtotas paroles laukam jābūt vienādiem.',
             ]);
