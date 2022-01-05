@@ -8,6 +8,7 @@ use Session;
 use App\Models\User;
 use App\Models\Email;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Mail;
 
 class UserController extends Controller // Based on tutorial published here: https://www.positronx.io/laravel-custom-authentication-login-and-registration-tutorial/
@@ -19,7 +20,7 @@ class UserController extends Controller // Based on tutorial published here: htt
 
     // Authenticate user
     public function login(Request $request)
-    {
+    {        
         $request->validate([
             'email' => 'required',
             'password' => 'required',
@@ -40,13 +41,26 @@ class UserController extends Controller // Based on tutorial published here: htt
       
     // Register a new user
     public function registerUser(Request $request)
-    {  
-        $request->validate([
+    {
+        $validator = Validator::make($request->all(), [
             'name' => 'required',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8',
             'password-repeat' => 'required|same:password',
+        ], [
+            'name.required' => 'Vārds ir obligāts.',
+            'email.required' => 'E-pasta adrese ir obligāta.',
+            'email.unique' => 'E-pasta adrese jau ir aizņemta.',
+            'email.email' => 'Ievadiet derīgu e-pasta adresi.',
+            'password.required' => 'Parole ir obligāta.',
+            'password.min' => 'Parolei jābūt vismaz :min simbolus garai.',
+            'password-repeat.required' => 'Ievadiet paroli vēlreiz.',
+            'password-repeat.same' => 'Parolei un atkārtotas paroles laukam jābūt vienādiem.',
         ]);
+
+        if ($validator->fails()) {
+            return redirect('registration')->withErrors($validator->errors());
+        };
            
         $data = $request->all();
 
@@ -75,7 +89,7 @@ class UserController extends Controller // Based on tutorial published here: htt
             $message->from("seko.saeimai@gmail.com","Seko Saeimai");
         });
         
-        return redirect("/");
+        return redirect("/")->withSuccess('Lietotājs reģistrēts. Lai pabeigtu reģistrāciju, atveriet uz e-pasta adresi '.$to_email.' nosūtīto apstiprināšanas saiti!');
     }    
 
     // Confirm user email address (using link sent to email)
