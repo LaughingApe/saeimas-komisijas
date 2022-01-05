@@ -133,7 +133,8 @@ class SubscriptionController extends Controller
             if (empty($email)) {
                 return redirect('subscriptions')->withErrors(['error1' => 'Kļūda. E-pasta adrese netika atrasta.']);
             }
-            Subscription::where('email_id', $email->id)->delete();
+
+            Subscription::where('email_id', $email->id)->delete(); // Also delete the email address' subscriptions
             $email->delete();
             return redirect("/subscriptions")->withSuccess('E-pasta adrese '.$email->email_address.' noņemta.');
         } else { // If user hasn't authenticated, then email address and token must be specified, too
@@ -149,7 +150,7 @@ class SubscriptionController extends Controller
             if (empty($email)) {
                 return redirect('/')->withErrors(['error1' => 'Kļūda. E-pasta adresi neizdevās dzēst.']);
             }
-            Subscription::where('email_id', $email->id)->delete();
+            Subscription::where('email_id', $email->id)->delete(); // Also delete the email address' subscriptions
             $email->delete();
             return redirect("/")->withSuccess('E-pasta adrese '.$email->email_address.' noņemta.');
         }
