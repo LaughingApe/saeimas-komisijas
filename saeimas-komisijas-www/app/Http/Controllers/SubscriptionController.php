@@ -128,10 +128,10 @@ class SubscriptionController extends Controller
             if (empty(Auth::user()->email_verified_at) || Auth::user()->email_verified_at->format('Y-m-d H:i:s') > date('Y-m-d H:i:s'))
                 return view('subscriptions')->withErrors(['error1' => 'Lūdzu, apstipriniet savu e-pasta adresi, pirms lietot "Seko Saeimai". Uz norādīto e-pasta adresi esam nosūtījuši apstiprinājuma saiti. Pārbaudi, vai tā nav iekritusi mēstuļu sadaļā!']);
         
-            $email = Email::find($email_id);
+            $email = Email::where('id', $email_id)->where('user_id', Auth::user()->id)->first();
 
-            if ($email == null) {
-                return redirect('subsciptions')->withErrors(['error1' => 'Kļūda. E-pasta adrese netika atrasta.']);
+            if (empty($email)) {
+                return redirect('subscriptions')->withErrors(['error1' => 'Kļūda. E-pasta adrese netika atrasta.']);
             }
             $email->delete();
         } else { // If user hasn't authenticated, then email address and token must be specified, too
@@ -144,7 +144,7 @@ class SubscriptionController extends Controller
 
             $email = Email::where('id', $email_id)->where('email_address', $emailAddress)->where('email_verification_token', $emailToken)->first();
 
-            if ($email == null) {
+            if (empty($email)) {
                 return redirect('/')->withErrors(['error1' => 'Kļūda. E-pasta adresi neizdevās dzēst.']);
             }
             $email->delete();
