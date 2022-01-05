@@ -127,19 +127,30 @@ class UserController extends Controller // Based on tutorial published here: htt
         if(Auth::check()) {
             if (empty(Auth::user()->email_verified_at) || Auth::user()->email_verified_at->format('Y-m-d H:i:s') > date('Y-m-d H:i:s'))
                 return view('subscriptions')->withErrors(['error1' => 'Lūdzu, apstipriniet savu e-pasta adresi, pirms lietot "Seko Saeimai". Uz norādīto e-pasta adresi esam nosūtījuši apstiprinājuma saiti. Pārbaudi, vai tā nav iekritusi mēstuļu sadaļā!']);
-            
-            $request->validate([
-                'oldPassword' => 'required',
-                'newPassword' => 'required|string|min:8',
-                'newPasswordRepeat' => 'required|same:newPassword',
-            ]);
-    
+                
             $user = Auth::user();
-    
+
             // Check if current passwords match
             if (!Hash::check($request->oldPassword, $user->password)) {
-                return redirect("change-password")->withErrors(['error1' => 'Līdzšinējā parole nav pareiza.']);
+                return redirect("change-password")->withErrors(['oldPassword' => 'Līdzšinējā parole nav pareiza.']);
             }
+
+            $validator = Validator::make($request->all(), [
+                'oldPassword' => 'required',
+                'newPassword' => 'required|min:8',
+                'newPasswordRepeat' => 'required|same:newPassword',
+            ], [
+                'oldPassword.required' => 'Līdzšinējā parole ir obligāta.',
+                'newPassword.required' => 'Jaunā parole ir obligāta.',
+                'newPassword.min' => 'Parolei jābūt vismaz :min simbolus garai..',
+                'newPasswordRepeat.required' => 'Parole ir obligāta.',
+                'newPasswordRepeat.same' => 'Parolei un atkārtotas paroles laukam jābūt vienādiem.',
+            ]);
+    
+            if ($validator->fails()) {
+                return redirect('change-password')->withErrors($validator->errors());
+            };
+
     
             // Save new password
             $user->password = Hash::make($request->newPassword);

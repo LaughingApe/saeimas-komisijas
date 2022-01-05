@@ -14,9 +14,6 @@ Mainīt paroli
             </div>
             @endif
 
-            @foreach ($errors->all() as $error)
-            <div class="alert alert-warning">{{ $error }}</div>
-            @endforeach
             <div class="card">
 
                 <div class="card-body">
