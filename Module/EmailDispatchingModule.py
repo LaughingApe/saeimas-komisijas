@@ -7,6 +7,8 @@ import datetime
 import mysql.connector
 import copy
 import smtplib
+import logging
+
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -40,9 +42,8 @@ class EmailDispatchingModule:
             server = smtplib.SMTP_SSL(self.config['MAIL']['MAIL_HOST'], self.config['MAIL']['MAIL_PORT'])
             server.ehlo()
             server.login(self.config['MAIL']['MAIL_USERNAME'], self.config['MAIL']['MAIL_PASSWORD'])
-
         except:
-            print('Neizdevās savienoties ar e-pasta lietotni.')
+            logging.error('Could not connect to the email service')
 
         # Set the common part for all emails
         msg = MIMEMultipart('alternative')
@@ -68,9 +69,8 @@ Sistēmā <i>Titania</i> pievienota jauna komisijas sēde. Lai skatītu sistēm�
 
             server.sendmail(msg['From'], e['email_address'], msg.as_string())
         
+        logging.info('Sent ' + str(len(emailAddresses)) + ' emails about new meeting ' + meeting.unid)
         server.close()
-
-
         
     # Notify subscribers about changes in an existing meeting
     def notifyMeetingChanged(self, oldMeeting, newMeeting, commissionDisplayName): 
@@ -93,9 +93,8 @@ Sistēmā <i>Titania</i> pievienota jauna komisijas sēde. Lai skatītu sistēm�
             server = smtplib.SMTP_SSL(self.config['MAIL']['MAIL_HOST'], self.config['MAIL']['MAIL_PORT'])
             server.ehlo()
             server.login(self.config['MAIL']['MAIL_USERNAME'], self.config['MAIL']['MAIL_PASSWORD'])
-
         except:
-            print('Neizdevās savienoties ar e-pasta lietotni.')
+            logging.error('Could not connect to the email service')
         
         # Set the common part for all emails
         msg = MIMEMultipart('alternative')
@@ -143,4 +142,5 @@ Sistēmā <i>Titania</i> pievienota jauna komisijas sēde. Lai skatītu sistēm�
 
             server.sendmail(msg['From'], e['email_address'], msg.as_string())
         
+        logging.info('Sent ' + str(len(emailAddresses)) + ' emails about updated meeting ' + oldMeeting.unid)
         server.close()

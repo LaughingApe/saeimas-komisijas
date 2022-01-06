@@ -6,6 +6,7 @@ import time
 import datetime
 import mysql.connector
 import copy
+import logging
 
 from requests.api import request
 
@@ -25,22 +26,27 @@ class CommissionModule:
         self.commissions = []
 
         requestSuccessful = False
-        for i in range(3):
+        for i in range(int(self.config['OTHERS']['FAILED_REQUEST_REPEATED_ATTEMPTS'])): # Try to repeat the request in case of request failure
             try:
                 commissionResponse = requests.get(self.config['SCRAPER']['COMMISSION_LIST_URL'])
                 requestSuccessful = True
             except requests.exceptions as errh:
-                print ("Request error: ",errh, " (attempt " + str(i+1) + "/3)")
-                time.sleep(3*(i+2))
+                logging.warning('scrapeCommissions request failed (attempt ' + str(i+1) + '/' + self.config['OTHERS']['FAILED_REQUEST_REPEATED_ATTEMPTS'] + ') ' + errh)
+                time.sleep(3*(i+2)) # Increase the delay after every unsuccessful attempt
 
         if requestSuccessful == False:
+            logging.error('scrapeCommissions failed to scrape the commission list')
             return False
 
         commissionPageHTML = BeautifulSoup(commissionResponse.text, 'html.parser')
         commissionListHTML = commissionPageHTML.find(id='categoryBody_parl13')
 
+        limit = 0
         for commissionHTML in commissionListHTML.find_all('div', 'categoryListEntry'):
             self.commissions.append(Commission(commissionHTML.text, commissionHTML.b.a['href'])) # Put all commissions in a list
+            limit += 1
+            if limit == 5:
+                break
 
         return True
         
@@ -64,30 +70,29 @@ class CommissionModule:
             if commission.displayName not in commissionDisplayNamesInDB: # If commission not in database, insert it
                 nameTranslation = commission.displayName.lower().maketrans('āčēģīķļņšūž ', 'acegiklnsuz-', ',./\\') # Create commission technical name from display name
                 dbCursor.execute("INSERT INTO commissions (name, display_name, url) VALUES ('" + commission.displayName.lower().translate(nameTranslation) + "','" + commission.displayName + "', '" + commission.url + "')")
-                print("Add new commission '" + commission.displayName + "' to the database")
+                logging.info('Stored new commission in database: ' + commission.displayName)
 
         db.commit()
 
     # Scrape all current meetings commission by commission
     def scrapeAllMeetings(self):
         for commission in self.commissions:
-            print('...3 second pause')
             time.sleep(3) # Pause so as to not overwhelm Titania with requests
             self.scrapeMeetingsByCommission(commission) # Scrape the meetings of this commission
-            print(commission.displayName + ": " + str(commission.meetingCount) + " meetings found")
 
     # Scrape all meetings of one commission
     def scrapeMeetingsByCommission(self, commission):
         requestSuccessful = False
-        for i in range(3):
+        for i in range(int(self.config['OTHERS']['FAILED_REQUEST_REPEATED_ATTEMPTS'])): # Try to repeat the request in case of request failure
             try:
                 meetingResponse = requests.get(self.config['SCRAPER']['COMMISSION_URL_BASE'] + commission.url[1:])
                 requestSuccessful = True
             except requests.exceptions as errh:
-                print ("Request error: ",errh, " (attempt " + str(i+1) + "/3)")
-                time.sleep(3*(i+2))
+                logging.warning('scrapeMeetingsByCommission request failed (attempt ' + str(i+1) + '/'  + self.config['OTHERS']['FAILED_REQUEST_REPEATED_ATTEMPTS'] + ') ' + errh)
+                time.sleep(3*(i+2)) # Increase the delay after every unsuccessful attempt
             
         if requestSuccessful == False:
+            logging.error('scrapeMeetingsByCommission failed to scrape the meetings of commission "' + commission.displayName + '"')
             return False
 
         meetingPageHTML = BeautifulSoup(meetingResponse.text, 'html.parser')
@@ -122,27 +127,30 @@ class CommissionModule:
                 commission.meetings.append(m)
                 time.sleep(3)
                 self.scrapeMeetingDescription(m)
-        
-        return False
+
+        logging.info('Commission "' + commission.displayName + '" and its ' + str(len(commission.meetings)) + ' meeting(s) scraped.')
+
+        return True
                 
     # Scrape meeting description (agenda) of one meeting
     def scrapeMeetingDescription(self, meeting):
         requestSuccessful = False
-        for i in range(3):
+        for i in range(int(self.config['OTHERS']['FAILED_REQUEST_REPEATED_ATTEMPTS'])): # Try to repeat the request in case of request failure
             try:
                 meetingResponse = requests.get(self.config['SCRAPER']['MEETING_URL_BASE'].replace('<UNID>', meeting.unid))
                 requestSuccessful = True
             except requests.exceptions as errh:
-                print ("Request error: ",errh, " (attempt " + str(i+1) + "/3)")
-                time.sleep(3*(i+2))
+                logging.warning('scrapeMeetingDescription request failed (attempt ' + str(i+1) + '/'  + self.config['OTHERS']['FAILED_REQUEST_REPEATED_ATTEMPTS'] + ') ' + errh)
+                time.sleep(3*(i+2)) # Increase the delay after every unsuccessful attempt
             
         if requestSuccessful == False:
+            logging.error('scrapeMeetingDescription failed to scrape the meeting description of meeting ' + meeting.unid)
             return False
-
+        
         meetingPageHTML = BeautifulSoup(meetingResponse.text, 'html.parser')
         meeting.description = str(meetingPageHTML.find(id='textBody'))
         
-        print("Description of '" + meeting.title +  "' scraped")
+        logging.info('Scraped description of meeting ' + meeting.title + ' (' + meeting.unid + ')')
 
     # Check what has changed, order updates in database and email dispatching, if necessary
     def checkMeetingChanges(self):
@@ -154,6 +162,8 @@ class CommissionModule:
         )
         dbCursor = db.cursor()
 
+        newMeetingCounter = 0
+        updatedMeetingCounter = 0
 
         # Go through every commissions every meeting (of those, which are saved in memory/relevant)
         for commission in self.commissions:
@@ -163,6 +173,7 @@ class CommissionModule:
                 res = dbCursor.fetchall()
 
                 if not res: # If meeting not in database, upload it and send notifications about new meeting
+                    newMeetingCounter += 1
                     self.uploadMeetingToDatabase(meeting)
                     self.emailDispatchingModule.notifyMeetingAdded(meeting, commission.displayName)
                 else: # If meeting already is in database, upload it and send notifications about new meeting
@@ -181,9 +192,11 @@ class CommissionModule:
 
                     # If anything changed, update meeting in database, send email notifications
                     if updateObject.title != None or updateObject.meetingTime != None or updateObject.place != None or updateObject.description != None:
+                        updatedMeetingCounter += 1
                         self.updateMeetingInDatabase(updateObject)
                         self.emailDispatchingModule.notifyMeetingChanged(oldMeeting, meeting, commission.displayName)
-                    
+
+        logging.info('Changes checked. ' + str(newMeetingCounter) + ' new meeting(s) found, ' + str(updatedMeetingCounter) + ' updated meetings found')
 
     # Upload a new meeting to the database
     def uploadMeetingToDatabase(self, meeting):
@@ -198,7 +211,7 @@ class CommissionModule:
         dbCursor.execute("INSERT INTO meetings (unid, title, meeting_time, place, description) VALUES ('" + meeting.unid +  "','" + meeting.title + "', '" + meeting.meetingTime.strftime('%Y-%m-%d %H:%M:%S') + "', '" + meeting.place + "', '" + meeting.description + "')")
         db.commit()
 
-        print("Database: add meeting '" + meeting.title +  "' at " + meeting.meetingTime.strftime('%Y-%m-%d %H:%M:%S'))
+        logging.info('Stored new meeting in database: ' + meeting.title +  ' at ' + meeting.meetingTime.strftime('%Y-%m-%d %H:%M:%S') + ' (' + meeting.unid + ')')
 
     # Update an existing meeting in the database
     def updateMeetingInDatabase(self, updateObject):
@@ -225,4 +238,5 @@ class CommissionModule:
         dbCursor.execute("UPDATE meetings SET " + ', '.join(setlist) + " WHERE unid = '" + updateObject.unid + "'")
         db.commit()
 
-        print("Database: updated meeting '" + updateObject.unid)
+        logging.info('Updated a meeting in database with UNID = ' + updateObject.unid)
+
