@@ -41,13 +41,9 @@ class CommissionModule:
         commissionPageHTML = BeautifulSoup(commissionResponse.text, 'html.parser')
         commissionListHTML = commissionPageHTML.find(id='categoryBody_parl13')
 
-        limit = 0
         for commissionHTML in commissionListHTML.find_all('div', 'categoryListEntry'):
             self.commissions.append(Commission(commissionHTML.text, commissionHTML.b.a['href'])) # Put all commissions in a list
-            limit += 1
-            if limit == 5:
-                break
-
+        
         return True
         
     # Update the commission list in the database
@@ -70,9 +66,14 @@ class CommissionModule:
             if commission.displayName not in commissionDisplayNamesInDB: # If commission not in database, insert it
                 nameTranslation = commission.displayName.lower().maketrans('āčēģīķļņšūž ', 'acegiklnsuz-', ',./\\') # Create commission technical name from display name
                 dbCursor.execute("INSERT INTO commissions (name, display_name, url) VALUES ('" + commission.displayName.lower().translate(nameTranslation) + "','" + commission.displayName + "', '" + commission.url + "')")
+                db.commit()
                 logging.info('Stored new commission in database: ' + commission.displayName)
+            
+            # Get and store the commission database ID
+            dbCursor.execute("SELECT id FROM commissions WHERE display_name='" + commission.displayName + "'")
+            dbResponse = dbCursor.fetchall()
+            commission.id = dbResponse[0][0]
 
-        db.commit()
 
     # Scrape all current meetings commission by commission
     def scrapeAllMeetings(self):
@@ -174,7 +175,7 @@ class CommissionModule:
 
                 if not res: # If meeting not in database, upload it and send notifications about new meeting
                     newMeetingCounter += 1
-                    self.uploadMeetingToDatabase(meeting)
+                    self.uploadMeetingToDatabase(meeting, commission.id)
                     self.emailDispatchingModule.notifyMeetingAdded(meeting, commission.displayName)
                 else: # If meeting already is in database, upload it and send notifications about new meeting
                     updateObject = copy.deepcopy(meeting) # Update object with everything that has changed
@@ -199,7 +200,7 @@ class CommissionModule:
         logging.info('Changes checked. ' + str(newMeetingCounter) + ' new meeting(s) found, ' + str(updatedMeetingCounter) + ' updated meetings found')
 
     # Upload a new meeting to the database
-    def uploadMeetingToDatabase(self, meeting):
+    def uploadMeetingToDatabase(self, meeting, commission_id):
         db = mysql.connector.connect(
             host=self.config['DATABASE']['HOST'],
             user=self.config['DATABASE']['USERNAME'],
@@ -208,7 +209,7 @@ class CommissionModule:
         )
         dbCursor = db.cursor()
 
-        dbCursor.execute("INSERT INTO meetings (unid, title, meeting_time, place, description) VALUES ('" + meeting.unid +  "','" + meeting.title + "', '" + meeting.meetingTime.strftime('%Y-%m-%d %H:%M:%S') + "', '" + meeting.place + "', '" + meeting.description + "')")
+        dbCursor.execute("INSERT INTO meetings (unid, title, meeting_time, place, description, commission_id) VALUES ('" + meeting.unid +  "','" + meeting.title + "', '" + meeting.meetingTime.strftime('%Y-%m-%d %H:%M:%S') + "', '" + meeting.place + "', '" + meeting.description + "', " + str(commission_id) + ")")
         db.commit()
 
         logging.info('Stored new meeting in database: ' + meeting.title +  ' at ' + meeting.meetingTime.strftime('%Y-%m-%d %H:%M:%S') + ' (' + meeting.unid + ')')
