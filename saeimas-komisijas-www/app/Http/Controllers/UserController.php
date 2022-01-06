@@ -7,6 +7,7 @@ use Hash;
 use Session;
 use App\Models\User;
 use App\Models\Email;
+use App\Models\Subscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Mail;
@@ -167,6 +168,34 @@ class UserController extends Controller // Based on tutorial published here: htt
         Auth::logout();
   
         return Redirect('/');
+    }
+
+    public function deleteAccount() {
+        if (Auth::check()) {        
+            return view('user.delete_account', [
+                'userId' => Auth::user()->id
+            ]);
+        }
+    }
+
+    public function deleteUser(Request $request) {
+        if (Auth::check()) {
+
+            if ($request->userId != Auth::user()->id) { // If correct user ID is not passed, don't delete
+                return redirect('delete-account')->withErrors('Notika kļūda. Neizdevās dzēst lietotāja kontu.');
+            }
+
+            $emails = Email::where('user_id', Auth::user()->id)->get();
+
+            foreach ($emails as $e) { // Delete subscriptions of all email addresses
+                Subscription::where('email_id', $e->id)->delete();
+            }
+
+            Email::where('user_id', Auth::user()->id)->delete(); // First delete email addresses
+            User::find(Auth::user()->id)->delete();
+            
+            return redirect('/')->withSuccess('Lietotāja konts dzēsts.');
+        }
     }
 
 }

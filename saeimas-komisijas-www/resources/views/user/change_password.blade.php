@@ -1,7 +1,7 @@
 @extends('app')
 
 @section('title')
-Mainīt paroli
+Lietotāja dati
 @endsection
 
 @section('content')
@@ -39,8 +39,10 @@ Mainīt paroli
                             <button type="submit" class="btn btn-success">Saglabāt</button>
                         </div>
                     </form>
-
                 </div>
+            </div>
+            <div class="mt-2">
+                <a href="{{ url('delete-account') }}" class="link-danger">Dzēst kontu</a>
             </div>
         </div>
     </div>

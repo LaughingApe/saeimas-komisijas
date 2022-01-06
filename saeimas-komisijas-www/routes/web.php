@@ -35,6 +35,8 @@ Route::get('change-password', [UserController::class, 'changePassword'])->name('
 Route::post('change-password', [UserController::class, 'updatePassword'])->name('change-password.store');
 Route::get('signout', [UserController::class, 'signOut'])->name('signout');
 Route::get('confirm-email', [UserController::class, 'confirmUserEmailAddress'])->name('confirm-user-email-address');
+Route::get('delete-account', [UserController::class, 'deleteAccount'])->name('delete-account');
+Route::post('delete-account', [UserController::class, 'deleteUser'])->name('user.delete');
 
 
 // Subscription routes
