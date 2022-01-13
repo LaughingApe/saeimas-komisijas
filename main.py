@@ -11,7 +11,7 @@ config.read(os.path.dirname(__file__) + '/config.ini')
 
 # Set up logger
 logging.basicConfig(handlers=[
-        logging.FileHandler(config['APP']['LOG']),  # Log file
+        logging.FileHandler(os.path.dirname(__file__) + '/' + config['APP']['LOG']),  # Log file
         logging.StreamHandler()                     # Command line
     ], 
     format='[%(asctime)s] %(levelname)s: %(message)s', 
