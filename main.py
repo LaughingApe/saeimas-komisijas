@@ -1,12 +1,13 @@
 from Module.CommissionModule import CommissionModule
 import configparser
 import logging
+import os
 
 from Module.EmailDispatchingModule import EmailDispatchingModule
 
 # Read the configuration file
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read(os.path.dirname(__file__) + '/config.ini')
 
 # Set up logger
 logging.basicConfig(handlers=[
