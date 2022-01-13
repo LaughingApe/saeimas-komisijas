@@ -7,11 +7,11 @@ from Module.EmailDispatchingModule import EmailDispatchingModule
 
 # Read the configuration file
 config = configparser.ConfigParser()
-config.read(os.path.dirname(__file__) + '/config.ini')
+config.read(os.path.dirname(os.path.abspath(__file__)) + '/config.ini')
 
 # Set up logger
 logging.basicConfig(handlers=[
-        logging.FileHandler(os.path.dirname(__file__) + '/' + config['APP']['LOG']),  # Log file
+        logging.FileHandler(os.path.dirname(os.path.abspath(__file__)) + '/' + config['APP']['LOG']),  # Log file
         logging.StreamHandler()                     # Command line
     ], 
     format='[%(asctime)s] %(levelname)s: %(message)s', 
